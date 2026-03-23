@@ -67,12 +67,12 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
 
   void _clearFollowUpDate() {
     _updateLease(_lease.copyWith(nextFollowUpDate: null));
-    _showMessage('다음 연락일을 지웠습니다.');
+    _showMessage('다음 연락일을 삭제했습니다.');
   }
 
   void _setNegotiating() {
     _updateLease(_lease.copyWith(status: LeaseStatus.negotiating));
-    _showMessage('상태를 협의 중으로 변경했습니다.');
+    _showMessage('상태를 협의중으로 변경했습니다.');
   }
 
   void _setEnded() {
@@ -201,37 +201,45 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
               const SizedBox(height: 12),
               _actionButton(label: '전화하기', onPressed: _callTenant),
               const SizedBox(height: 10),
-              _actionButton(label: '문자 공유', onPressed: _shareMessage),
+              _actionButton(label: '문자/공유', onPressed: _shareMessage),
               const SizedBox(height: 10),
               _actionButton(
                 label: _lease.nextFollowUpDate == null
                     ? '다음 연락일 정하기'
-                    : '다음 연락일 변경',
+                    : '다음 연락일 수정',
                 onPressed: _pickNextFollowUpDate,
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  '정한 연락일은 홈 화면의 연락 목록에 표시됩니다.',
+                  style: textTheme.bodyMedium,
+                ),
               ),
               const SizedBox(height: 10),
               _actionButton(
-                label: '다음 연락일 지우기',
+                label: '다음 연락일 삭제',
                 onPressed: _lease.nextFollowUpDate == null
                     ? null
                     : _clearFollowUpDate,
               ),
+              const SizedBox(height: 10),
+              _actionButton(label: '협의중으로 변경', onPressed: _setNegotiating),
               const SizedBox(height: 24),
               _sectionTitle('계약 처리'),
               const SizedBox(height: 4),
               Text('계약 내용을 반영합니다.', style: textTheme.bodyLarge),
               const SizedBox(height: 12),
-              _actionButton(label: '협의 중으로 변경', onPressed: _setNegotiating),
+              _actionButton(label: '갱신 (+2년)', onPressed: _renewTwoYears),
               const SizedBox(height: 10),
-              _actionButton(label: '2년 연장', onPressed: _renewTwoYears),
-              const SizedBox(height: 10),
-              _actionButton(label: '계약 종료', onPressed: _setEnded),
+              _actionButton(label: '종료/퇴거', onPressed: _setEnded),
               const SizedBox(height: 24),
               _sectionTitle('정보 관리'),
               const SizedBox(height: 12),
-              _actionButton(label: '계약 정보 수정', onPressed: _openEditScreen),
+              _actionButton(label: '정보 수정', onPressed: _openEditScreen),
               const SizedBox(height: 10),
-              _actionButton(label: '계약 삭제', onPressed: _deleteLease),
+              _actionButton(label: '삭제', onPressed: _deleteLease),
             ],
           ),
         ),
