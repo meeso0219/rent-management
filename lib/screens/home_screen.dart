@@ -226,6 +226,7 @@ class _PrioritySummaryCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: InkWell(
         onTap: onTap,
@@ -277,6 +278,8 @@ class _PrioritySummaryCard extends StatelessWidget {
                 helperText,
                 style: textTheme.titleMedium?.copyWith(height: 1.4),
               ),
+              const SizedBox(height: 16),
+              _TapHintRow(accentColor: accentColor),
             ],
           ),
         ),
@@ -306,6 +309,7 @@ class _CompactSummaryCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: InkWell(
         onTap: onTap,
@@ -334,10 +338,47 @@ class _CompactSummaryCard extends StatelessWidget {
                 helperText,
                 style: textTheme.bodyLarge?.copyWith(height: 1.35),
               ),
+              const SizedBox(height: 14),
+              _TapHintRow(accentColor: accentColor),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _TapHintRow extends StatelessWidget {
+  const _TapHintRow({required this.accentColor});
+
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          '눌러서 보기',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: accentColor,
+          ),
+        ),
+        const Spacer(),
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: accentColor.withValues(alpha: 0.14),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 18,
+            color: accentColor,
+          ),
+        ),
+      ],
     );
   }
 }
