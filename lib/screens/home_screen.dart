@@ -63,6 +63,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  String _countdownText(int days) {
+    if (days > 0) {
+      return '$days일 남음';
+    }
+    if (days == 0) {
+      return '오늘 만료';
+    }
+    return '${days.abs()}일 지남';
+  }
+
   @override
   Widget build(BuildContext context) {
     final dashboard = HomeDashboardData.fromRepository(widget.repository);
@@ -79,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 96),
         children: [
           Text(
-            '오늘 해야 할 일',
+            '오늘 할 일',
             style: textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w800,
               height: 1.2,
@@ -87,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '연락이 필요한 계약과 만료 예정 계약을 먼저 확인하세요.',
+            '연락이 필요한 계약과 곧 끝나는 계약을 먼저 확인하세요.',
             style: textTheme.titleMedium?.copyWith(height: 1.4),
           ),
           const SizedBox(height: 20),
@@ -96,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
             countText: '${dashboard.followUpTodayCount}건',
             helperText: dashboard.followUpTodayCount == 0
                 ? '오늘 바로 연락할 계약이 없습니다.'
-                : '오늘 연락이 필요한 계약을 먼저 확인하세요.',
+                : '오늘 연락할 계약을 먼저 확인하세요.',
             accentColor: const Color(0xFF0E7490),
             icon: Icons.phone_in_talk_rounded,
             onTap: () => _openFilteredList(
@@ -112,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: _CompactSummaryCard(
                   title: '협의중',
                   countText: '${dashboard.negotiatingCount}건',
-                  helperText: '현재 협의 중인 계약',
+                  helperText: '지금 협의 중인 계약',
                   accentColor: const Color(0xFFB45309),
                   onTap: () => _openFilteredList(
                     title: '협의중',
@@ -126,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: _CompactSummaryCard(
                   title: '이번 달 만료',
                   countText: '${dashboard.expiringThisMonthCount}건',
-                  helperText: '이번 달 안에 종료',
+                  helperText: '이번 달 안에 끝남',
                   accentColor: const Color(0xFF0B6E4F),
                   onTap: () => _openFilteredList(
                     title: '이번 달 만료',
@@ -138,9 +148,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 28),
-          _SectionHeader(
+          const _SectionHeader(
             title: '오늘 연락할 항목',
-            subtitle: '홈 화면에서 바로 확인할 수 있도록 최근 항목 3건을 보여드립니다.',
+            subtitle: '오늘 먼저 확인할 계약 3건을 보여드립니다.',
           ),
           const SizedBox(height: 12),
           if (dashboard.top3TodayFollowUps.isEmpty)
@@ -159,14 +169,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 28),
-          _SectionHeader(
+          const _SectionHeader(
             title: '만료 임박 TOP 3',
             subtitle: '종료일이 가까운 계약부터 확인하세요.',
           ),
           const SizedBox(height: 12),
           if (dashboard.topExpiringLeases.isEmpty)
             const _EmptySectionCard(
-              message: '만료 임박 계약이 없습니다.',
+              message: '곧 끝나는 계약이 없습니다.',
             ),
           ...dashboard.topExpiringLeases.map(
             (lease) => _LeaseTile(
@@ -174,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
               subtitle:
                   '${lease.tenantName} · 종료일 ${formatLeaseDate(lease.leaseEnd)}',
               trailing: Text(
-                formatLeaseCountdown(lease.daysRemainingUntilLeaseEnd()),
+                _countdownText(lease.daysRemainingUntilLeaseEnd()),
                 style: TextStyle(
                   fontWeight: FontWeight.w800,
                   color: Theme.of(context).colorScheme.primary,
