@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rent_management/controllers/add_lease_controller.dart';
 import 'package:rent_management/models/lease.dart';
 import 'package:rent_management/utils/lease_formatters.dart';
 
@@ -14,6 +15,7 @@ class AddLeaseScreen extends StatefulWidget {
 class _AddLeaseScreenState extends State<AddLeaseScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  late final AddLeaseController _controller;
   late final TextEditingController _buildingController;
   late final TextEditingController _unitController;
   late final TextEditingController _tenantController;
@@ -22,11 +24,10 @@ class _AddLeaseScreenState extends State<AddLeaseScreen> {
   DateTime? _leaseStartDate;
   DateTime? _leaseEndDate;
 
-  bool get _isEditMode => widget.initialLease != null;
-
   @override
   void initState() {
     super.initState();
+    _controller = AddLeaseController(initialLease: widget.initialLease);
     _buildingController = TextEditingController(
       text: widget.initialLease?.buildingName ?? '',
     );
@@ -72,40 +73,22 @@ class _AddLeaseScreenState extends State<AddLeaseScreen> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    if (_leaseStartDate == null || _leaseEndDate == null) {
-      _showMessage('계약 시작일과 종료일을 모두 선택해주세요.');
-      return;
-    }
-    if (_leaseEndDate!.isBefore(_leaseStartDate!)) {
-      _showMessage('계약 종료일은 시작일보다 늦어야 합니다.');
-      return;
-    }
 
-    if (_isEditMode) {
-      final updated = widget.initialLease!.copyWith(
-        buildingName: _buildingController.text.trim(),
-        unitNumber: _unitController.text.trim(),
-        tenantName: _tenantController.text.trim(),
-        tenantPhone: _phoneController.text.trim(),
-        leaseStart: _leaseStartDate!,
-        leaseEnd: _leaseEndDate!,
-      );
-      Navigator.of(context).pop(updated);
-      return;
-    }
-
-    final lease = Lease(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+    final result = _controller.submit(
       buildingName: _buildingController.text.trim(),
       unitNumber: _unitController.text.trim(),
       tenantName: _tenantController.text.trim(),
       tenantPhone: _phoneController.text.trim(),
-      leaseStart: _leaseStartDate!,
-      leaseEnd: _leaseEndDate!,
-      status: LeaseStatus.active,
-      nextFollowUpDate: null,
+      leaseStartDate: _leaseStartDate,
+      leaseEndDate: _leaseEndDate,
     );
-    Navigator.of(context).pop(lease);
+
+    if (!result.isSuccess) {
+      _showMessage(result.errorMessage!);
+      return;
+    }
+
+    Navigator.of(context).pop(result.lease);
   }
 
   void _showMessage(String message) {
@@ -117,7 +100,7 @@ class _AddLeaseScreenState extends State<AddLeaseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditMode ? '계약 수정' : '계약 추가')),
+      appBar: AppBar(title: Text(_controller.title)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -159,7 +142,7 @@ class _AddLeaseScreenState extends State<AddLeaseScreen> {
                 height: 56,
                 child: FilledButton(
                   onPressed: _submit,
-                  child: Text(_isEditMode ? '수정 완료' : '계약 등록'),
+                  child: Text(_controller.submitLabel),
                 ),
               ),
             ],

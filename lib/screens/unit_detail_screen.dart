@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rent_management/controllers/unit_detail_controller.dart';
 import 'package:rent_management/models/lease.dart';
 import 'package:rent_management/screens/add_lease_screen.dart';
 import 'package:rent_management/utils/lease_formatters.dart';
@@ -23,31 +24,22 @@ class UnitDetailScreen extends StatefulWidget {
 }
 
 class _UnitDetailScreenState extends State<UnitDetailScreen> {
-  late Lease _lease;
+  late final UnitDetailController _controller;
   bool _isClosing = false;
+
+  Lease get _lease => _controller.lease;
 
   @override
   void initState() {
     super.initState();
-    _lease = widget.lease;
+    _controller = UnitDetailController(initialLease: widget.lease);
   }
 
-  void _updateLease(Lease updated) {
+  void _runMutation(String Function() mutation) {
     setState(() {
-      _lease = updated;
+      final message = mutation();
+      _showMessage(message);
     });
-  }
-
-  void _renewTwoYears() {
-    final end = _lease.leaseEnd;
-    _updateLease(
-      _lease.copyWith(
-        leaseEnd: DateTime(end.year + 2, end.month, end.day),
-        status: LeaseStatus.active,
-        nextFollowUpDate: null,
-      ),
-    );
-    _showMessage('계약을 2년 연장했습니다.');
   }
 
   Future<void> _pickNextFollowUpDate() async {
@@ -61,25 +53,7 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
     if (picked == null) {
       return;
     }
-    _updateLease(_lease.copyWith(nextFollowUpDate: picked));
-    _showMessage('다음 연락일을 저장했습니다.');
-  }
-
-  void _clearFollowUpDate() {
-    _updateLease(_lease.copyWith(nextFollowUpDate: null));
-    _showMessage('다음 연락일을 삭제했습니다.');
-  }
-
-  void _setNegotiating() {
-    _updateLease(_lease.copyWith(status: LeaseStatus.negotiating));
-    _showMessage('상태를 협의중으로 변경했습니다.');
-  }
-
-  void _setEnded() {
-    _updateLease(
-      _lease.copyWith(status: LeaseStatus.ended, nextFollowUpDate: null),
-    );
-    _showMessage('계약을 종료 상태로 변경했습니다.');
+    _runMutation(() => _controller.saveFollowUpDate(picked));
   }
 
   Future<void> _callTenant() async {
@@ -91,11 +65,7 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
   }
 
   Future<void> _shareMessage() async {
-    await Share.share(
-      '안녕하세요 ${_lease.tenantName}님.\n'
-      '${_lease.buildingName} ${_lease.unitNumber} 계약 안내드립니다.\n'
-      '계약 종료일은 ${formatLeaseDate(_lease.leaseEnd)}입니다.',
-    );
+    await Share.share(_controller.shareMessage);
   }
 
   Future<void> _openEditScreen() async {
@@ -107,7 +77,9 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
     if (updated == null) {
       return;
     }
-    _updateLease(updated);
+    setState(() {
+      _controller.replaceLease(updated);
+    });
     if (!mounted) {
       return;
     }
@@ -152,17 +124,6 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  String _countdownText() {
-    final days = _lease.daysRemainingUntilLeaseEnd();
-    if (days > 0) {
-      return '$days일 남음';
-    }
-    if (days == 0) {
-      return '오늘 만료';
-    }
-    return '${days.abs()}일 지남';
   }
 
   @override
@@ -222,18 +183,27 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
                 label: '다음 연락일 삭제',
                 onPressed: _lease.nextFollowUpDate == null
                     ? null
-                    : _clearFollowUpDate,
+                    : () => _runMutation(_controller.clearFollowUpDate),
               ),
               const SizedBox(height: 10),
-              _actionButton(label: '협의중으로 변경', onPressed: _setNegotiating),
+              _actionButton(
+                label: '협의중으로 변경',
+                onPressed: () => _runMutation(_controller.setNegotiating),
+              ),
               const SizedBox(height: 24),
               _sectionTitle('계약 처리'),
               const SizedBox(height: 4),
               Text('계약 내용을 반영합니다.', style: textTheme.bodyLarge),
               const SizedBox(height: 12),
-              _actionButton(label: '갱신 (+2년)', onPressed: _renewTwoYears),
+              _actionButton(
+                label: '갱신 (+2년)',
+                onPressed: () => _runMutation(_controller.renewTwoYears),
+              ),
               const SizedBox(height: 10),
-              _actionButton(label: '종료/퇴거', onPressed: _setEnded),
+              _actionButton(
+                label: '종료/퇴거',
+                onPressed: () => _runMutation(_controller.setEnded),
+              ),
               const SizedBox(height: 24),
               _sectionTitle('정보 관리'),
               const SizedBox(height: 12),
@@ -275,7 +245,7 @@ class _UnitDetailScreenState extends State<UnitDetailScreen> {
             const SizedBox(height: 8),
             _highlightRow(
               label: '만료까지',
-              value: _countdownText(),
+              value: _controller.countdownText(),
               toneColor: colorScheme.primary,
             ),
             const SizedBox(height: 8),

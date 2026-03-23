@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:rent_management/controllers/home_controller.dart';
 import 'package:rent_management/models/lease.dart';
 import 'package:rent_management/repositories/lease_repository.dart';
 import 'package:rent_management/screens/add_lease_screen.dart';
 import 'package:rent_management/screens/unit_detail_screen.dart';
 import 'package:rent_management/screens/units_list_screen.dart';
 import 'package:rent_management/utils/lease_formatters.dart';
-import 'package:rent_management/view_models/home_dashboard_data.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.repository});
@@ -17,6 +17,14 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late final HomeController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = HomeController(widget.repository);
+  }
+
   Future<void> _openAddLeaseScreen() async {
     final created = await Navigator.of(context).push<Lease>(
       MaterialPageRoute<Lease>(builder: (_) => const AddLeaseScreen()),
@@ -25,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
     setState(() {
-      widget.repository.addLease(created);
+      _controller.addLease(created);
     });
     ScaffoldMessenger.of(
       context,
@@ -40,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => UnitsListScreen(
-          repository: widget.repository,
+          repository: _controller.repository,
           title: title,
           filter: filter,
           emptyMessage: emptyMessage,
@@ -55,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _openAllContracts() async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
-        builder: (_) => UnitsListScreen(repository: widget.repository),
+        builder: (_) => UnitsListScreen(repository: _controller.repository),
       ),
     );
     if (mounted) {
@@ -75,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dashboard = HomeDashboardData.fromRepository(widget.repository);
+    final dashboard = _controller.dashboard;
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -163,9 +171,9 @@ class _HomeScreenState extends State<HomeScreen> {
               subtitle: '${lease.tenantName} · ${leaseStatusText(lease.status)}',
               trailing: const Icon(Icons.chevron_right),
               onUpdated: (updated) =>
-                  setState(() => widget.repository.updateLease(updated)),
+                  setState(() => _controller.updateLease(updated)),
               onDeleted: (id) =>
-                  setState(() => widget.repository.deleteLeaseById(id)),
+                  setState(() => _controller.deleteLeaseById(id)),
             ),
           ),
           const SizedBox(height: 28),
@@ -191,9 +199,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               onUpdated: (updated) =>
-                  setState(() => widget.repository.updateLease(updated)),
+                  setState(() => _controller.updateLease(updated)),
               onDeleted: (id) =>
-                  setState(() => widget.repository.deleteLeaseById(id)),
+                  setState(() => _controller.deleteLeaseById(id)),
             ),
           ),
           const SizedBox(height: 18),
