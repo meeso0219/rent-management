@@ -21,7 +21,7 @@ String leaseStatusText(LeaseStatus status) {
     case LeaseStatus.active:
       return '진행 중';
     case LeaseStatus.negotiating:
-      return '협의 중';
+      return '협의중';
     case LeaseStatus.ended:
       return '종료';
   }

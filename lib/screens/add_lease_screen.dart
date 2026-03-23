@@ -77,7 +77,7 @@ class _AddLeaseScreenState extends State<AddLeaseScreen> {
       return;
     }
     if (_leaseEndDate!.isBefore(_leaseStartDate!)) {
-      _showMessage('계약 종료일은 시작일보다 뒤여야 합니다.');
+      _showMessage('계약 종료일은 시작일보다 늦어야 합니다.');
       return;
     }
 
